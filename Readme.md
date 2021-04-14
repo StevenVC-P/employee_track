@@ -12,8 +12,6 @@ This application allows the user to view, add, and remove employees, job titles,
 * [Usage](#Usage)
 * [License](#License)
 * [Contributing](#Contributing)
-* [Tests](#Tests)
-* [Questions](#Questions)
 
 ## Installation
 This app requires the user to install mysql, inquirer, chalk, and asciiart-logo.  The user will also need to create a connection.js file to hold configuration information to connect to thier SQL workbench
@@ -25,11 +23,11 @@ After the node packages have been installed, in the terminal the user can start 
 Mozzila Public License 2.0
 Please review [https://opensource.org/licenses/MPL-2.0](https://opensource.org/licenses/MPL-2.0) to understand the license.
 
-## Contributing
+![image](https://user-images.githubusercontent.com/77998885/114654243-5db0a680-9caf-11eb-8766-788c376bd2cc.png)
 
+![image](https://user-images.githubusercontent.com/77998885/114654299-7de06580-9caf-11eb-9bda-46a153930334.png)
 
-## Tests
-
+[View Walkthrough](https://drive.google.com/file/d/1SFyigNn-UHw0D3-RrIQ4p2LmhwoViuYI/view)
 
 ## Questions
 Come checkout my Github!
