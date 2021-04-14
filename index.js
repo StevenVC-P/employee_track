@@ -2,19 +2,19 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const {config} = require('./config/connection');
+const logo = require("asciiart-logo");
 
-const startScreen = ['View all Employees', 'View all Employees by Department', 'View all Employees by Manager','Add Employee', 'Remove Employee', 'Update Employee Role','View all Roles', 'Add Role', 'Remove Role', 'View all Departments', 'Add Department', 'Remove Department', 'Exit'];
+const startScreen = ['View all Employees','Add Employee', 'Remove Employee', 'View all Roles', 'Add Role', 'Remove Role', 'View all Departments', 'Add Department', 'Remove Department', 'Exit'];
 const connection = mysql.createConnection(config);
 const cTable = require('console.table');
-const allEmployeeQuery = `SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title AS "Title", d.department_name AS "Department", IFNULL(r.salary, 'No Data') AS "Salary", CONCAT(m.first_name," ",m.last_name) AS "Manager"
+const allEmployeeQuery = 
+`SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title AS "Title", d.department_name AS "Department", IFNULL(r.salary, 'No Data') AS "Salary",
+CONCAT(m.first_name," ",m.last_name) AS "Manager"
 FROM employees e
-LEFT JOIN roles r 
-ON r.id = e.role_id 
-LEFT JOIN departments d 
-ON d.id = r.department_id
+LEFT JOIN roles r ON r.id = e.role_id 
+LEFT JOIN departments d ON d.id = r.department_id 
 LEFT JOIN employees m ON m.id = e.manager_id
 ORDER BY e.id;`
-const roleQuery = `SELECT * FROM roles`
 
 const start = [
     {
@@ -25,50 +25,17 @@ const start = [
     },
 ];
 
-// const selectDept = [
-//     {
-//         type:"list",
-//         message: "Which department?",
-//         choices: function() {
-//             let deptArray = results.map(choice => choice.department_name)
-//             return deptArray;
-//         },
-//         name:'debtChoice',
-//     }
-// ]
-
-// const selectMGR = [
-//     {
-//         type:"list",
-//         message: "Which manager?",
-//         choices: function() {
-//             let mgrArray = results.map(choice => choice.manager = 1)
-//             return mgrArray;
-//         },
-//         name:'debtChoice', 
-//     }
-// ]
-
 function init(){
     inquirer.prompt(start).then(res => {
         switch(res.response){
             case 'View all Employees':
                 viewEmployees();
             break;
-            case 'View all Employees By Department':
-                viewEmployeesDepartment();
-            break;
-            case 'View all Employees By Manager':
-                console.log("viewEmployeesManager");
-            break;
             case 'Add Employee':
-                console.log("addEmployee");
+                addEmployee();
             break;
             case 'Remove Employee':
                 removeEmployee();
-            break;
-            case 'Update Employee Role':
-                console.log("updateRole");
             break;
             case 'View all Roles':
                 viewRole();
@@ -96,7 +63,6 @@ function init(){
     })
 };
 
-
 function viewEmployees(){
     connection.query(allEmployeeQuery, (err, res) => {
      if (err) throw err;
@@ -106,63 +72,59 @@ function viewEmployees(){
     })
 };
 
-// function viewEmployeesDepartment(){
-//     connection.query('SELECT * FROM departments', (err, res) => {
-//         if (err) throw err;
-
-//         inquirer.prompt(selectDept).then((result) => {
-//             const query = 'SELECT employee.id, role.title AS "Title, employee.first_name AS "First Name", employee.last_name AS "Last Name",  department.department_name AS "Department", rolessalary AS "Salary" FROM employees e INNER JOIN roles r ON rolesid = employee.role_if INNER JOIN departments d ON department.id = rolemployee.department_id WHERE?;';
-//             connection.query(query, {department_name: result.department_name}, (err, res) => {
-//             if (err) throw err;
-//             console.log(' ');
-//             console.table(chalk.green((`All Employees by Department: ${result.department_name}`)), res)
-//             init();
-//             })
-//         })
-//     })
-// };
-
-// function viewEmployeesManager(){
-//     const mgrQuery = 'SELECT * FROM employees '
-//     connect.query(mgrQuery, (err, res) => {
-//         if (err) throw err;
-//         inquirer.prompt(selectMGR).then((result) => {
-//         })
-//     })
-// };
-
 function addEmployee(){
-    connection.query(roleQuery, (err, results) => {
+     connection.query(allEmployeeQuery, (err, res) => {
         if (err) throw err;
+        console.table(chalk.green('All Roles'), res)
         inquirer.prompt([
             {
                 type: 'input',
-                message: "Employee's first name?",
-                name: 'firstName',
+                message: "Whats is their first name?",
+                name: 'firstName'
             },
             {
                 type: 'input',
-                message: "Employee's last name?",
-                name: 'lastName',
+                message: "Whats is their last name?",
+                name: 'lastName'
             },
             {
                 type: 'list',
-                message: "Employee's job title?",
-                name: 'role',
-                choices: function () {
-                    let choiceArray = results[0].map(choice => choice.title);
+                choices() {
+                    const choiceArray = [];
+                    res.forEach(({Title}) => {
+                        if (!choiceArray.includes(Title)){
+                        choiceArray.push(Title)}
+                    });
                     return choiceArray;
                 },
-                
+                message: 'What is thier job title',
+                name: 'role'
             },
-        ]).then((result) =>{
-        connection.query(`INSERT INTO employees(first_name, last_name, role_id) VALUES(?, ?,
-            (SELECT id FROM roles WHERE title = ?)`,
-        [result.firstname, result.lastname, result.role,])
-        init();
+            {
+                type: 'list',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach(({Manager}) => {
+                        if (!choiceArray.includes(Manager)){
+                        choiceArray.push(Manager)}
+                    });
+                    return choiceArray;
+                },
+                message: 'Who is thier manager?',
+                name: 'manager'
+            },
+        ]).then((response) => {
+            connection.query(
+                `INSERT INTO employees(first_name, last_name, role_id, manager_id) VALUES(?, ?, 
+                    (SELECT id FROM roles WHERE title = ?),
+                    (SELECT id FROM (SELECT id FROM employees WHERE CONCAT(m.first_name," ",m.last_name) = ?)))`,
+                    [response.firstName, response.lastName, response.role, response.manager]
+            )
+            init();
         })
     })
 };
+
 function removeEmployee(){
     connection.query(allEmployeeQuery, (err, res) => {
         if (err) throw err;
@@ -180,16 +142,9 @@ function removeEmployee(){
             })
     })
 };
-// function addRole(){
-
-// };
-
-// function updateRole(){
-
-// };
 
 function viewRole(){
-    connection.query(`SELECT title AS "Title" FROM roles`, (err, res) => {
+    connection.query(`SELECT * FROM roles`, (err, res) => {
         if (err) throw err;
         console.log(' ');
         console.table(chalk.green('All Roles'), res)
@@ -198,10 +153,10 @@ function viewRole(){
 };
 
 function addRole(){
-    connection.query(`SELECT FROM roles; SELECT FROM departments`, (err, res) => {
-        if (err) throw err;
-        console.log(' ');
-        console.table(chalk.green('All Roles'), res)
+    connection.query("SELECT * FROM roles r LEFT JOIN departments ON departments.id = r.department_id", (err, res) => {
+            if (err) throw err;
+            console.log('');
+            console.table(chalk.green('List of current Roles:'), res);
         inquirer.prompt([
             {
                 type: 'input',
@@ -215,24 +170,30 @@ function addRole(){
             },
             {
                 type: 'list',
-                message: 'Select the Department for this new Title:',
+                message: 'What department is this role apart of?',
                 choices() {
-                const choiceArray = [];
-                res.forEach(({ department_name }) => {
-                  choiceArray.push(department_name);
-                });
-                return choiceArray;
+                    const choiceArray = [];
+                    res.forEach(({ id }) => {
+                        if (!choiceArray.includes(id)){
+                        choiceArray.push(id)}
+                    });
+                    return choiceArray;
                 },
-                name: 'deptName'
-            }
+                name: 'department',
+            },
         ]).then((response) => {
-            connection.query(`INSERT INTO roles(title, salary, department_id) VALUES(?)`, 
-            response.newTitle, response.newSalary, {department_name: response.deptName})
+            connection.query(`INSERT INTO roles SET?`, 
+            {
+                title: response.newTitle,
+                salary: response.newSalary,
+                department_id: response.department
+            },
+            (err) => {if (err) throw err;
+            })
             init();
         })
     })
-
-};;
+};
 
 function removeRole(){
     connection.query(`SELECT * FROM roles`, (err, res) => {
@@ -262,7 +223,7 @@ function removeRole(){
 };
 
 function viewDepartments(){
-    connection.query(`SELECT department_name AS "Department Name" FROM departments`, (err, res) => {
+    connection.query(`SELECT * FROM departments`, (err, res) => {
         if (err) throw err;
         console.log(' ');
         console.table(chalk.green('All Departments'), res)
@@ -315,7 +276,23 @@ function removeDepartment(){
         })
     })
 };
+
+function displayLogo(){
+    const logoText = logo(
+        {
+        name: "My Employee Tracker",
+        lineChars: 20,
+        padding: 2,
+        margin: 2,
+        borderColor: 'blue',
+        logoColor: 'yellow',
+        }
+    ).render();
+console.log(logoText);
+}
+
 connection.connect((err) => {
     if (err) throw err;
-    init()
+    displayLogo();
+    init();
 });
