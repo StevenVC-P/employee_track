@@ -8,7 +8,7 @@ const startScreen = ['View all Employees','Add Employee', 'Remove Employee', 'Vi
 const connection = mysql.createConnection(config);
 const cTable = require('console.table');
 const allEmployeeQuery = 
-`SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title AS "Title", d.department_name AS "Department", IFNULL(r.salary, 'No Data') AS "Salary",
+`SELECT e.id, e.first_name AS "First Name", e.last_name AS "Last Name", r.title AS "Title", d.department_name AS "Department", r.salary AS "Salary",
 CONCAT(m.first_name," ",m.last_name) AS "Manager"
 FROM employees e
 LEFT JOIN roles r ON r.id = e.role_id 
@@ -100,26 +100,12 @@ function addEmployee(){
                 message: 'What is thier job title',
                 name: 'role'
             },
-            {
-                type: 'list',
-                choices() {
-                    const choiceArray = [];
-                    res.forEach(({Manager}) => {
-                        if (!choiceArray.includes(Manager)){
-                        choiceArray.push(Manager)}
-                    });
-                    return choiceArray;
-                },
-                message: 'Who is thier manager?',
-                name: 'manager'
-            },
         ]).then((response) => {
             connection.query(
-                `INSERT INTO employees(first_name, last_name, role_id, manager_id) VALUES(?, ?, 
-                    (SELECT id FROM roles WHERE title = ?),
-                    (SELECT id FROM (SELECT id FROM employees WHERE CONCAT(m.first_name," ",m.last_name) = ?)))`,
-                    [response.firstName, response.lastName, response.role, response.manager]
-            )
+                `INSERT INTO employees(first_name, last_name, role_id) VALUES(?, ?, 
+                    (SELECT id FROM roles WHERE title = ?))`,
+                    [response.firstName, response.lastName, response.role],
+                    )
             init();
         })
     })
