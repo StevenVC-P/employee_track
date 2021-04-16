@@ -27,7 +27,7 @@ Please review [https://opensource.org/licenses/MPL-2.0](https://opensource.org/l
 
 ![image](https://user-images.githubusercontent.com/77998885/114654299-7de06580-9caf-11eb-9bda-46a153930334.png)
 
-[View Walkthrough](https://drive.google.com/file/d/1SFyigNn-UHw0D3-RrIQ4p2LmhwoViuYI/view)
+[View Walkthrough](https://drive.google.com/file/d/1x1iMiI_4Pdq2oG5DqRJtYmbK31BzztcM/view)
 
 ## Questions
 Come checkout my Github!
